@@ -10,7 +10,8 @@ This is a tool to manage SolVPS virtual private servers directly from the comman
 It works by scraping the web-based user interface at https://www.solvps.com/secure/clientarea.php
 ''')
 p.add_argument('id', nargs='?', help="numeric ID or domain name of VPS")
-p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh','rdp'), help="Action to perform on the VPS (ssh only for Linux, rdp only for Windows)")
+p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh'),
+               help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
 p.add_argument('-u', '--username')
 p.add_argument('-p', '--password')
 args = p.parse_args()
@@ -72,6 +73,3 @@ elif args.action=='ssh':
     console_host, console_port = sshdest['value'].split(':')
     console_password = strongs[1].text
     print("\n\tsshpass -p '%s' ssh %s%s\n" % (console_password, ('' if console_port=='22' else '-p%s ' % console_port), console_host))
-elif args.action=='rdp':
-    #br.open('https://www.solvps.com/secure/clientarea.php?action=productdetails&id=%d&mg-action=novnc' % vps_id)
-    p.error("Not yet supported")
