@@ -71,7 +71,7 @@ else:
 ########################################
 
 if args.action in ('boot','shutdown','reboot'):
-    br.open('%s&mg-action=%sVM' % (url, args.action))
+    br.open('%s&json=true&mg-action=%sVM' % (url, args.action))
     print(br.response.text)
 elif args.action=='browse':
     webbrowser.open(url)
