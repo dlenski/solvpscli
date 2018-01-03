@@ -41,9 +41,9 @@ if args.id is None:
     domain_url_desc = [(span.text, span.parent['href'], next(span.parent.stripped_strings, None)) for span in spans]
 
     print("No VPS ID or domain name specified. List:")
-    for domain, baseurl, desc in domain_id_desc:
-        vps_id = dict(parse_qsl(urlparse(url).query)).get('id', '???')
-        print("%-6s) %s\n\t%s" % (vps_id, domain, desc))
+    for domain, baseurl, desc in domain_url_desc:
+        vps_id = dict(parse_qsl(urlparse(baseurl).query)).get('id', '???')
+        print("[%s]\t%s\n\t%s" % (vps_id, domain, desc))
     raise SystemExit(1)
 
 elif args.id.isdigit():
