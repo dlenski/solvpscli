@@ -4,6 +4,7 @@ from urllib.parse import urlparse, parse_qsl, urljoin
 import webbrowser
 import argparse
 import getpass
+import os
 
 p = argparse.ArgumentParser(description='''
 This is a tool to manage SolVPS virtual private servers directly from the command line.
@@ -13,17 +14,22 @@ It works by scraping the web-based user interface at https://www.solvps.com/secu
 p.add_argument('id', nargs='?', help="SolVPS numeric ID, or domain name")
 p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh'),
                help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
-p.add_argument('-u', '--username')
-p.add_argument('-p', '--password')
 args = p.parse_args()
 
-br=robobrowser.RoboBrowser(parser='html.parser')
+try:
+    username, password = (l.strip() for l in open(os.path.expanduser('~/.solvps_credentials')))
+except (IOError, ValueError):
+    print("Could not read SolVPS credentials from ~/.solvps_credentials")
+    print("File should contain username on the line #1, password on line #2.")
+    username = input("SolVPS username: ")
+    password = getpass("SolVPS password: ")
 
 print("Logging in to SolVPS...")
+br=robobrowser.RoboBrowser(parser='html.parser')
 br.open('https://www.solvps.com/secure/clientarea.php')
 f = br.get_form(0)
-f['username'] = args.username or input('Username: ')
-f['password'] = args.password or getpass.getpass('Password: ')
+f['username'] = username
+f['password'] = password
 br.submit_form(f)
 if 'incorrect=true' in br.url:
     p.error('Incorrect username or password')
