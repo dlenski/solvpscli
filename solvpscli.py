@@ -11,7 +11,7 @@ This is a tool to manage SolVPS virtual private servers directly from the comman
 
 It works by scraping the web-based user interface at https://www.solvps.com/secure/clientarea.php
 ''')
-p.add_argument('id', nargs='?', help="SolVPS numeric ID, or domain name")
+p.add_argument('vpsid', nargs='?', help="SolVPS numeric ID, or domain name")
 p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh'),
                help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
 args = p.parse_args()
@@ -42,7 +42,7 @@ if 'incorrect=true' in br.url:
 #   <a menuItemName="0" href="/secure/clientarea.php?action=productdetails&id=12345" class="list-group-item" id="ClientAreaHomePagePanels-Active_Products_Services-0">
 #   Windows VPS - Custom Windows VPS<br /><span class="text-domain">xyzdomain.company.com</span></a>
 
-if args.id is None:
+if args.vpsid is None:
     spans = br.find_all("span", {'class':'text-domain'})
     domain_url_desc = [(span.text, span.parent['href'], next(span.parent.stripped_strings, None)) for span in spans]
 
@@ -52,21 +52,21 @@ if args.id is None:
         print("[%s]\t%s\n\t%s" % (vps_id, domain, desc))
     raise SystemExit(1)
 
-elif args.id.isdigit():
-    vps_id = int(args.id)
+elif args.vpsid.isdigit():
+    vps_id = int(args.vpsid)
     url = 'https://www.solvps.com/secure/clientarea.php?action=productdetails&id=%d' % vps_id
 
 else:
-    span = br.find("span", {'class':'text-domain'}, text=args.id)
+    span = br.find("span", {'class':'text-domain'}, text=args.vpsid)
     if span is None:
-        p.error("Couldn't find domain %s under your services" % args.id)
+        p.error("Couldn't find domain %s under your services" % args.vpsid)
 
     try:
         url = urljoin(br.url, span.parent['href'])
         vps_id = int(dict(parse_qsl(urlparse(url).query)).get('id'))
     except Exception:
-        p.error("Found domain %s, but couldn't parse ID from:\n\t%s" % (args.id, span.parent))
-    print("Found domain %s with VPS ID %d" % (args.id, vps_id))
+        p.error("Found domain %s, but couldn't parse ID from:\n\t%s" % (args.vpsid, span.parent))
+    print("Found domain %s with VPS ID %d" % (args.vpsid, vps_id))
 
 ########################################
 
@@ -74,6 +74,7 @@ if args.action in ('boot','shutdown','reboot'):
     br.open('%s&json=true&mg-action=%sVM' % (url, args.action))
     print(br.response.text)
 elif args.action=='browse':
+    print("Opening in browser: %s ..." % url)
     webbrowser.open(url)
 elif args.action=='status':
     br.open(url)
@@ -92,5 +93,8 @@ elif args.action=='ssh':
 
     console_host, console_port = sshdest['value'].split(':')
     console_password = strongs[1].text
-    print("Linux system console can now be accessed via ssh:\n\n\tsshpass -p '%s' ssh %s%s\n"
+    print("Linux system console can now be accessed via ssh:\n")
+    print("\tssh %s%s\n\t  (with password '%s')\n"
+          % (('' if console_port=='22' else '-p%s ' % console_port), console_host, console_password))
+    print("\tsshpass -p '%s' ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s%s\n"
           % (console_password, ('' if console_port=='22' else '-p%s ' % console_port), console_host))
