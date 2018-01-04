@@ -93,8 +93,5 @@ elif args.action=='ssh':
 
     console_host, console_port = sshdest['value'].split(':')
     console_password = strongs[1].text
-    print("Linux system console can now be accessed via ssh:\n")
-    print("\tssh %s%s\n\t  (with password '%s')\n"
-          % (('' if console_port=='22' else '-p%s ' % console_port), console_host, console_password))
-    print("\tsshpass -p '%s' ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s%s\n"
+    print("Linux system console can now be accessed via ssh:\n\n\tsshpass -p '%s' ssh -o StrictHostKeyChecking=no %s%s\n"
           % (console_password, ('' if console_port=='22' else '-p%s ' % console_port), console_host))

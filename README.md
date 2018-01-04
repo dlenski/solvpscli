@@ -98,9 +98,8 @@ VM status:
 For Linux VPS systems, it's possible to access the
 [kernel console](https://en.wikipedia.org/wiki/Linux_console) which may be useful for
 troubleshooting an otherwise non-responsive system. Invoking `solvpscli [vpsid] ssh`
-provisions an SSH console and displays the OpenSSH command line and password that should
-be used to access it, along with a shortcut to connect with no password prompt using
-[sshpass](https://sourceforge.net/projects/sshpass/):
+provisions an SSH console and displays a shortcut to connect with no password prompt,
+using [sshpass](https://sourceforge.net/projects/sshpass/) and OpenSSH:
 
 ```sh
 $ solvpscli linuxbox1.company.com ssh
@@ -108,10 +107,7 @@ Logging in to SolVPS...
 Found domain linuxbox1.company.com with VPS ID 12345
 Linux system console can now be accessed via ssh:
 
-        ssh console-foO0BR@12.34.56.78
-          (with password 'F0o0BarBz1')
-
-        sshpass -p 'F0o0BarBz1' ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no console-foO0BR@12.34.56.78
+        sshpass -p 'F0o0BarBz1' ssh -o StrictHostKeyChecking=no console-foO0BR@12.34.56.78
 
 ```
 
