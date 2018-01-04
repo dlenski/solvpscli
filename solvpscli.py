@@ -25,7 +25,7 @@ except (IOError, ValueError):
     password = getpass("SolVPS password: ")
 
 print("Logging in to SolVPS...")
-br=robobrowser.RoboBrowser(parser='html.parser')
+br=robobrowser.RoboBrowser(parser='html.parser', user_agent='solvpscli')
 br.open('https://www.solvps.com/secure/clientarea.php')
 f = br.get_form(0)
 f['username'] = username
