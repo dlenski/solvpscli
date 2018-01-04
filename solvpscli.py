@@ -72,7 +72,11 @@ else:
 
 if args.action in ('boot','shutdown','reboot'):
     br.open('%s&json=true&mg-action=%sVM' % (url, args.action))
-    print(br.response.text)
+    if br.response.text.startswith('<JSONRESPONSE#') and br.response.text.endswith('#ENDJSONRESPONSE>'):
+        json = br.response.text[14:-17]
+        print(json)
+    else:
+        p.error("Did not receive expected JSON response")
 elif args.action=='browse':
     print("Opening in browser: %s ..." % url)
     webbrowser.open(url)

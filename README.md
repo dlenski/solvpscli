@@ -122,7 +122,7 @@ JSON response from the web service:
 $ solvpscli linuxbox1.company.com boot
 Logging in to SolVPS...
 Found domain linuxbox1.company.com with VPS ID 12345
-<JSONRESPONSE#{"success":"Virtual Server has been booted","result":"success","data":{"success":"Virtual Server has been booted"}}#ENDJSONRESPONSE>
+{"success":"Virtual Server has been booted","result":"success","data":{"success":"Virtual Server has been booted"}}
 ```
 
 The `browse` action opens the web view for the server in question, in your default web browser:
