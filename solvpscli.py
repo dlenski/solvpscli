@@ -47,31 +47,32 @@ if 'incorrect=true' in br.url:
 #   <a menuItemName="0" href="/secure/clientarea.php?action=productdetails&id=12345" class="list-group-item" id="ClientAreaHomePagePanels-Active_Products_Services-0">
 #   Windows VPS - Custom Windows VPS<br /><span class="text-domain">xyzdomain.company.com</span></a>
 
-if args.vpsid is None:
-    spans = br.find_all("span", {'class':'text-domain'})
-    domain_url_desc = [(span.text, span.parent['href'], next(span.parent.stripped_strings, None)) for span in spans]
-
-    print("No VPS ID or domain name specified. List:")
-    for domain, baseurl, desc in domain_url_desc:
-        vps_id = dict(parse_qsl(urlparse(baseurl).query)).get('id', '???')
-        print("[%s]\t%s\n\t%s" % (vps_id, domain, desc))
-    raise SystemExit(1)
-
-elif args.vpsid.isdigit():
+if args.vpsid and args.vpsid.isdigit():
     vps_id = int(args.vpsid)
     url = 'https://www.solvps.com/secure/clientarea.php?action=productdetails&id=%d' % vps_id
 
 else:
-    span = br.find("span", {'class':'text-domain'}, text=args.vpsid)
-    if span is None:
-        p.error("Couldn't find domain %s under your services" % args.vpsid)
-
+    spans = br.find_all("span", {'class':'text-domain'})
     try:
-        url = urljoin(br.url, span.parent['href'])
-        vps_id = int(dict(parse_qsl(urlparse(url).query)).get('id'))
+        parsed = [(span.text, span.parent['href'],
+                   int(dict(parse_qsl(urlparse(span.parent['href']).query)).get('id')),
+                   next(span.parent.stripped_strings, None))
+                  for span in spans if (args.vpsid is None or span.text.startswith(args.vpsid))]
     except Exception:
-        p.error("Found domain %s, but couldn't parse ID from:\n\t%s" % (args.vpsid, span.parent))
-    print("Found domain %s with VPS ID %d" % (args.vpsid, vps_id))
+        p.error("Couldn't parse URLs and IDs from:\n\t%s" % '\n\t'.join(span.parent for span in spans))
+
+    if args.vpsid and len(parsed)==1:
+        domain, url, vps_id, desc = parsed[0]
+        url = urljoin(br.url, url)
+        print("Found domain %s (%s) with VPS ID %d" % (domain, desc, vps_id))
+    else:
+        if args.vpsid is None:
+            print("No VPS ID or domain name specified. List:")
+        else:
+            print("Found %d domains with names starting with %s. Specify one:" % (len(parsed), args.vpsid))
+        for domain, baseurl, vps_id, desc in parsed:
+            print("[%s]\t%s\n\t%s" % (vps_id, domain, desc))
+        raise SystemExit(1)
 
 ########################################
 
