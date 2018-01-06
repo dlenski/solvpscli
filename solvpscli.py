@@ -14,15 +14,24 @@ It works by scraping the web-based user interface at https://www.solvps.com/secu
 p.add_argument('vpsid', nargs='?', help="SolVPS numeric ID, or domain name")
 p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh'),
                help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
+p.add_argument('-u','--username')
+p.add_argument('-p','--password')
 args = p.parse_args()
 
-try:
-    username, password = (l.strip() for l in open(os.path.expanduser('~/.solvps_credentials')))
-except (IOError, ValueError):
-    print("Could not read SolVPS credentials from ~/.solvps_credentials")
-    print("File should contain username on the line #1, password on line #2.")
+username = args.username
+password = args.password
+if not (username or password):
+    try:
+        username, password = (l.strip() for l in open(os.path.expanduser('~/.solvps_credentials')))
+    except (IOError, ValueError):
+        print("Could not read SolVPS credentials from ~/.solvps_credentials")
+        print("File should contain username on the line #1, password on line #2.")
+if not username:
     username = input("SolVPS username: ")
+if not password:
     password = getpass("SolVPS password: ")
+
+########################################
 
 print("Logging in to SolVPS...")
 br=robobrowser.RoboBrowser(parser='html.parser', user_agent='solvpscli')
