@@ -3,7 +3,7 @@ import robobrowser
 from urllib.parse import urlparse, parse_qsl, urljoin
 import webbrowser
 import argparse
-import getpass
+from getpass import getpass
 import os
 
 p = argparse.ArgumentParser(description='''
