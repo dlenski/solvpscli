@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 import robobrowser
-from urllib.parse import urlparse, parse_qsl, urljoin, urlencode
+from urllib.parse import urlparse, parse_qsl, urljoin, urlencode, quote
 import webbrowser
 import argparse
 from getpass import getpass
 import os
 
+actions = ('status','browse','boot','reboot','shutdown','ssh','passwd')
 p = argparse.ArgumentParser(description='''
 This is a tool to manage SolVPS virtual private servers directly from the command line.
 
 It works by scraping the web-based user interface at https://www.solvps.com/secure/clientarea.php
 ''')
 p.add_argument('vpsid', nargs='?', help="SolVPS numeric ID, or domain name")
-p.add_argument('action', nargs='?', default='status', choices=('status','browse','boot','reboot','shutdown','ssh'),
+p.add_argument('action', nargs='?', default='status', choices=actions,
                help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
 p.add_argument('-u','--username')
 p.add_argument('-p','--password')
@@ -78,6 +79,17 @@ else:
 
 if args.action in ('boot','shutdown','reboot'):
     br.open('%s&json=true&mg-action=%sVM' % (url, args.action))
+    if br.response.text.startswith('<JSONRESPONSE#') and br.response.text.endswith('#ENDJSONRESPONSE>'):
+        json = br.response.text[14:-17]
+        print(json)
+    else:
+        p.error("Did not receive expected JSON response")
+
+elif args.action=='passwd':
+    p1, p2 = getpass("Enter new password: "), getpass("Retype new password: ")
+    if p1!=p2:
+        p.error("Passwords do not match")
+    br.open('%s&json=true&mg-action=savePassword&newPassword=%s' % (url, quote(p1)))
     if br.response.text.startswith('<JSONRESPONSE#') and br.response.text.endswith('#ENDJSONRESPONSE>'):
         json = br.response.text[14:-17]
         print(json)
