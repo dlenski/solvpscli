@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import robobrowser
-from urllib.parse import urlparse, parse_qsl, urljoin
+from urllib.parse import urlparse, parse_qsl, urljoin, urlencode
 import webbrowser
 import argparse
 from getpass import getpass
@@ -26,11 +26,7 @@ except (IOError, ValueError):
 
 print("Logging in to SolVPS...")
 br=robobrowser.RoboBrowser(parser='html.parser', user_agent='solvpscli')
-br.open('https://www.solvps.com/secure/clientarea.php')
-f = br.get_form(0)
-f['username'] = username
-f['password'] = password
-br.submit_form(f)
+br.open( 'https://www.solvps.com/secure/dologin.php?%s' % urlencode((('username',username),('password',password))) )
 if 'incorrect=true' in br.url:
     p.error('Incorrect username or password')
 
