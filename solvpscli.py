@@ -83,16 +83,32 @@ if args.action in ('boot','shutdown','reboot'):
         print(json)
     else:
         p.error("Did not receive expected JSON response")
+
 elif args.action=='browse':
     print("Opening in browser: %s ..." % url)
     webbrowser.open(url)
+
 elif args.action=='status':
     br.open(url)
+
     tbl = br.find("table", {'class':'table pm-stats'})
     print("VM status:")
-    for tr in tbl.find_all('tr'):
+    for tr in tbl.find_all('tr') if tbl else ():
         tds = tr.find_all('td')
         print('\t%-20s : %s' % (tds[0].text, ' '.join(tds[1].stripped_strings)))
+
+    tbl = br.find("table", {'class':'table table-striped accesscred'})
+    print("Remote access credentials:")
+    for tr in tbl.find_all('tr') if tbl else ():
+        tds = tr.find_all('td')
+        print('\t%-20s : %s' % (tds[0].text, ' '.join(tds[1].stripped_strings)))
+
+    hdr = br.find("h3", {'class':'panel-title'}, string='Options')
+    print("Options:")
+    for tr in hdr.parent.parent.find_all('div', {'class':'row'}) if hdr else ():
+        tds = tr.find_all('div')
+        print('\t%-20s : %s' % (tds[0].text.strip(), ' '.join(tds[1].stripped_strings)))
+
 elif args.action=='ssh':
     br.open('%s&mg-action=vnc' % url)
     applet = br.find('applet')
