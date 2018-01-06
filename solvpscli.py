@@ -5,6 +5,7 @@ import webbrowser
 import argparse
 from getpass import getpass
 import os
+from json import loads
 
 actions = ('status','browse','boot','reboot','shutdown','ssh','passwd')
 p = argparse.ArgumentParser(description='''
@@ -77,24 +78,30 @@ else:
 
 ########################################
 
+def faux_json(t):
+    if not (t.startswith('<JSONRESPONSE#') and t.endswith('#ENDJSONRESPONSE>')):
+        raise ValueError("Did not receive expected JSON response")
+    json = loads(t[14:-17])
+    if json.get('result')=='success':
+        return json
+    raise RuntimeError("JSON response does not indicate success:\n\t%s" % json)
+
 if args.action in ('boot','shutdown','reboot'):
     br.open('%s&json=true&mg-action=%sVM' % (url, args.action))
-    if br.response.text.startswith('<JSONRESPONSE#') and br.response.text.endswith('#ENDJSONRESPONSE>'):
-        json = br.response.text[14:-17]
-        print(json)
-    else:
-        p.error("Did not receive expected JSON response")
+    try:
+        faux_json(br.response.text)
+    except (ValueError, RuntimeError) as e:
+        p.error(e.args[0])
 
 elif args.action=='passwd':
     p1, p2 = getpass("Enter new password: "), getpass("Retype new password: ")
     if p1!=p2:
         p.error("Passwords do not match")
     br.open('%s&json=true&mg-action=savePassword&newPassword=%s' % (url, quote(p1)))
-    if br.response.text.startswith('<JSONRESPONSE#') and br.response.text.endswith('#ENDJSONRESPONSE>'):
-        json = br.response.text[14:-17]
-        print(json)
-    else:
-        p.error("Did not receive expected JSON response")
+    try:
+        faux_json(br.response.text)
+    except (ValueError, RuntimeError) as e:
+        p.error(e.args[0])
 
 elif args.action=='browse':
     print("Opening in browser: %s ..." % url)
@@ -133,3 +140,5 @@ elif args.action=='ssh':
     console_password = strongs[1].text
     print("Linux system console can now be accessed via ssh:\n\n\tsshpass -p '%s' ssh -o StrictHostKeyChecking=no %s%s\n"
           % (console_password, ('' if console_port=='22' else '-p%s ' % console_port), console_host))
+
+print("Success.")
