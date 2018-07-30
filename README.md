@@ -34,6 +34,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --show-passwords      Show password fields in status output
 ```
 
 In order to avoid being prompted for your username and password on every invocation,
@@ -66,7 +67,7 @@ The `status` action is the default if no other action is specified. It
 displays status and configuration information on a VPS:
 
 ```sh
-$ solvpscli linuxbox1
+$ solvpscli --show-passwords linuxbox1
 Logging in to SolVPS...
 Found domain linuxbox1.company.com (Linux VPS - Custom Linux VPS) with VPS ID 12345
 VM status:

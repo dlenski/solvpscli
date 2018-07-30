@@ -16,6 +16,8 @@ It works by scraping the web-based user interface at https://www.solvps.com/secu
 p.add_argument('vpsid', nargs='?', help="SolVPS numeric ID, or domain name")
 p.add_argument('action', nargs='?', default='status', choices=actions,
                help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
+p.add_argument('--show-passwords', action='store_true',
+               help="Show password fields in status output")
 p.add_argument('-u','--username')
 p.add_argument('-p','--password')
 args = p.parse_args()
@@ -114,19 +116,28 @@ elif args.action=='status':
     print("VM status:")
     for tr in tbl.find_all('tr') if tbl else ():
         tds = tr.find_all('td')
-        print('\t%-20s : %s' % (tds[0].text, ' '.join(tds[1].stripped_strings)))
+        k, v = tds[0].text, ' '.join(tds[1].stripped_strings)
+        if 'passw' in k.lower() and not args.show_passwords:
+            v = '*' * len(v)
+        print('\t%-20s : %s' % (k, v))
 
     tbl = br.find("table", {'class':'table table-striped accesscred'})
     print("Remote access credentials:")
     for tr in tbl.find_all('tr') if tbl else ():
         tds = tr.find_all('td')
-        print('\t%-20s : %s' % (tds[0].text, ' '.join(tds[1].stripped_strings)))
+        k, v = tds[0].text, ' '.join(tds[1].stripped_strings)
+        if 'passw' in k.lower() and not args.show_passwords:
+            v = '*' * len(v)
+        print('\t%-20s : %s' % (k, v))
 
     hdr = br.find("h3", {'class':'panel-title'}, string='Options')
     print("Options:")
     for tr in hdr.parent.parent.find_all('div', {'class':'row'}) if hdr else ():
         tds = tr.find_all('div')
-        print('\t%-20s : %s' % (tds[0].text.strip(), ' '.join(tds[1].stripped_strings)))
+        k, v = tds[0].text.strip(), ' '.join(tds[1].stripped_strings)
+        if 'passw' in k.lower() and not args.show_passwords:
+            v = '*' * len(v)
+        print('\t%-20s : %s' % (k, v))
 
 elif args.action=='ssh':
     br.open('%s&mg-action=vnc' % url)
