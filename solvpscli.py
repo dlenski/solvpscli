@@ -125,7 +125,7 @@ elif args.action=='status':
     print("Remote access credentials:")
     for tr in tbl.find_all('tr') if tbl else ():
         tds = tr.find_all('td')
-        k, v = tds[0].text, ' '.join(tds[1].stripped_strings)
+        k, v = tds[0].text.rstrip(':'), ' '.join(tds[1].stripped_strings)
         if 'passw' in k.lower() and not args.show_passwords:
             v = '*' * len(v)
         print('\t%-20s : %s' % (k, v))
