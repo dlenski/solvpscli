@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import robobrowser
+from requests import session
 from urllib.parse import urlparse, parse_qsl, urljoin, urlencode, quote
 import webbrowser
 import argparse
@@ -20,6 +21,7 @@ p.add_argument('--show-passwords', action='store_true',
                help="Show password fields in status output")
 p.add_argument('-u','--username')
 p.add_argument('-p','--password')
+p.add_argument('-k','--insecure', action='store_false', dest='verify', default=True, help="Don't verify certificates")
 args = p.parse_args()
 
 username = args.username
@@ -39,6 +41,7 @@ if not password:
 
 print("Logging in to SolVPS...")
 br=robobrowser.RoboBrowser(parser='html.parser', user_agent='solvpscli')
+br.session.verify = args.verify
 br.open( 'https://www.solvps.com/secure/dologin.php?%s' % urlencode((('username',username),('password',password))) )
 if 'incorrect=true' in br.url:
     p.error('Incorrect username or password')
