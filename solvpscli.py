@@ -51,22 +51,29 @@ if 'incorrect=true' in br.url:
 # Identify numeric ID of VPS and management URL, or list possibilities, by parsing HTML that
 # looks like this:
 #
-#   <a menuItemName="0" href="/secure/clientarea.php?action=productdetails&id=12345" class="list-group-item" id="ClientAreaHomePagePanels-Active_Products_Services-0">
-#   Windows VPS - Custom Windows VPS<br /><span class="text-domain">xyzdomain.company.com</span></a>
+#   <a href="/secure/clientarea.php?action=productdetails&id=12345"><strong>Windows VPS - Custom Windows VPS</strong><br/>xyzdomain.company.com</a>
 
 if args.vpsid and args.vpsid.isdigit():
     vps_id = int(args.vpsid)
     url = 'https://www.solvps.com/secure/clientarea.php?action=productdetails&id=%d' % vps_id
 
 else:
-    spans = br.find_all("span", {'class':'text-domain'})
+    br.open( 'https://www.solvps.com/secure/clientarea.php?action=services' )
+    strongs = br.find_all("strong")
+
     try:
-        parsed = [(span.text, span.parent['href'],
-                   int(dict(parse_qsl(urlparse(span.parent['href']).query)).get('id')),
-                   next(span.parent.stripped_strings, None))
-                  for span in spans if (args.vpsid is None or span.text.startswith(args.vpsid))]
+        parsed = [(list(strong.parent.stripped_strings)[-1],
+                   strong.parent['href'],
+                   int(dict(parse_qsl(urlparse(strong.parent['href']).query)).get('id')),
+                   next(strong.stripped_strings, None))
+                  for strong in strongs
+                  if strong.parent.name == 'a' and 'href' in strong.parent.attrs]
     except Exception:
-        p.error("Couldn't parse URLs and IDs from:\n\t%s" % '\n\t'.join(span.parent for span in spans))
+        p.error("Couldn't parse URLs and IDs from:\n\t%s" % '\n\t'.join(str(strong.parent) for strong in strongs))
+
+    # narrow down list if domain name or prefix was specified on command line
+    if args.vpsid is not None:
+        parsed = [p for p in parsed if p[0].startswith(args.vpsid)]
 
     if args.vpsid and len(parsed)==1:
         domain, url, vps_id, desc = parsed[0]
