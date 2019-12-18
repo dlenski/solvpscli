@@ -8,7 +8,7 @@ from getpass import getpass
 import os
 from json import loads
 
-actions = ('status','browse','boot','reboot','shutdown','ssh','passwd')
+actions = ('status','browse','boot','reboot','shutdown','linux-console','windows-console','passwd')
 p = argparse.ArgumentParser(description='''
 This is a tool to manage SolVPS virtual private servers directly from the command line.
 
@@ -16,7 +16,7 @@ It works by scraping the web-based user interface at https://www.solvps.com/secu
 ''')
 p.add_argument('vpsid', nargs='?', help="SolVPS numeric ID, or domain name")
 p.add_argument('action', nargs='?', default='status', choices=actions,
-               help="Action to perform on the VPS (ssh to console is only available for Linux systems)")
+               help="Action to perform on the VPS")
 p.add_argument('--show-passwords', action='store_true',
                help="Show password fields in status output")
 p.add_argument('-u','--username')
@@ -149,7 +149,7 @@ elif args.action=='status':
             v = '*' * len(v)
         print('\t%-20s : %s' % (k, v))
 
-elif args.action=='ssh':
+elif args.action=='linux-console':
     br.open('%s&mg-action=vnc' % url)
     applet = br.find('applet')
     sshdest = applet and applet.find('param', {'name':'jcterm.destinations'})
@@ -161,5 +161,11 @@ elif args.action=='ssh':
     console_password = strongs[1].text
     print("Linux system console can now be accessed via ssh:\n\n\tsshpass -p '%s' ssh -o StrictHostKeyChecking=no %s%s\n"
           % (console_password, ('' if console_port=='22' else '-p%s ' % console_port), console_host))
+
+elif args.action=='windows-console':
+    console_url = '%s&mg-action=novnc' % url
+    print("Opening graphical console interface in browser: %s ..." % console_url)
+    webbrowser.open(console_url)
+
 
 print("Success.")

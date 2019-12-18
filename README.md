@@ -5,8 +5,10 @@ Table of Contents
     * [Usage](#usage)
       * [List active VPS](#list-active-vps)
       * [`status`](#status)
-      * [`ssh` console](#ssh-console)
       * [Change password](#change-password)
+      * [Console interfaces](#console-interfaces)
+        * [SSH console (Linux only)](#ssh-console-linux-only)
+        * [Graphical console (Windows only)](#graphical-console-windows-only)
       * [Other actions](#other-actions)
   * [License](#license)
   * [TODO](#todo)
@@ -20,7 +22,9 @@ web-based user interface.
 # Usage
 
 ```
-usage: solvpscli [-h] [vpsid] [{status,browse,boot,reboot,shutdown,ssh}]
+usage: solvpscli.py [-h] [--show-passwords] [-u USERNAME] [-p PASSWORD] [-k]
+                    [vpsid]
+                    [{status,browse,boot,reboot,shutdown,linux-console,windows-console,passwd}]
 
 This is a tool to manage SolVPS virtual private servers directly from the
 command line. It works by scraping the web-based user interface at
@@ -28,13 +32,15 @@ https://www.solvps.com/secure/clientarea.php
 
 positional arguments:
   vpsid                 SolVPS numeric ID, or domain name
-  {status,browse,boot,reboot,shutdown,ssh}
-                        Action to perform on the VPS (ssh to console is only
-                        available for Linux systems)
+  {status,browse,boot,reboot,shutdown,linux-console,windows-console,passwd}
+                        Action to perform on the VPS
 
 optional arguments:
   -h, --help            show this help message and exit
   --show-passwords      Show password fields in status output
+  -u USERNAME, --username USERNAME
+  -p PASSWORD, --password PASSWORD
+  -k, --insecure        Don't verify certificates
 ```
 
 In order to avoid being prompted for your username and password on every invocation,
@@ -95,26 +101,6 @@ Options:
 	Server Location      : Europe - London
 ```
 
-## `ssh` console
-
-For Linux VPS systems, it's possible to access the
-[kernel console](https://en.wikipedia.org/wiki/Linux_console) which may be useful for
-troubleshooting an otherwise non-responsive system. Invoking `solvpscli [vpsid] ssh`
-provisions an SSH console and displays a shortcut to connect with no password prompt,
-using [sshpass](https://sourceforge.net/projects/sshpass/) and OpenSSH:
-
-```sh
-$ solvpscli linuxbox1 ssh
-Logging in to SolVPS...
-Found domain linuxbox1 (Linux VPS - Custom Linux VPS) with VPS ID 12345
-Linux system console can now be accessed via ssh:
-
-        sshpass -p 'F0o0BarBz1' ssh -o StrictHostKeyChecking=no console-foO0BR@12.34.56.78
-
-```
-
-(The credentials for the SSH console will expire after about one hour.)
-
 ## Change password
 
 For Linux VPS systems, it's possible to change the `root` password via the management interface.
@@ -128,8 +114,44 @@ Retype new password: ****
 Success.
 ```
 
+## Console interfaces
+
+### SSH console (Linux only)
+
+For Linux VPS systems, it's possible to access the
+[kernel console](https://en.wikipedia.org/wiki/Linux_console) which may be useful for
+troubleshooting an otherwise non-responsive system. Invoking `solvpscli [vpsid] linux-console`
+provisions an SSH console and displays a shortcut to connect with no password prompt,
+using [sshpass](https://sourceforge.net/projects/sshpass/) and OpenSSH:
+
+```sh
+$ solvpscli linuxbox1 linux-console
+Logging in to SolVPS...
+Found domain linuxbox1 (Linux VPS - Custom Linux VPS) with VPS ID 12345
+Linux system console can now be accessed via ssh:
+
+        sshpass -p 'F0o0BarBz1' ssh -o StrictHostKeyChecking=no console-foO0BR@12.34.56.78
+
+```
+
 (The credentials for the SSH console will expire after about one hour.)
 
+### Graphical console (Windows only)
+
+For Windows VPS systems, it's possible to access the
+[Windows `/admin` console](https://blogs.technet.microsoft.com/peterfi/2008/01/11/mstsc-console-is-now-mstsc-admin/)
+via a browser-based
+[Windows Remote Desktop Protocol](https://en.wikipedia.org/wiki/Remote_Desktop_Protocol)
+client. Invoking `solvpscli [vpsid] windows-console` will open the browser-based view
+for the server in question, in your default web browser:
+
+```sh
+$ solvpscli windoze2 windows-console
+Logging in to SolVPS...
+Found domain windoze2.company.com with VPS ID 12346
+Opening graphical console interface in browser: https://www.solvps.com/secure/clientarea.php?action=productdetails&id=12346&mg-action=novnc ...
+Success.
+```
 
 ## Other actions
 
@@ -149,7 +171,7 @@ The `browse` action opens the web view for the server in question, in your defau
 $ solvpscli windoze2 browse
 Logging in to SolVPS...
 Found domain windoze2.company.com with VPS ID 12346
-Opening in browser: https://www.solvps.com/secure/clientarea.php?action=productdetails&id=12345 ...
+Opening in browser: https://www.solvps.com/secure/clientarea.php?action=productdetails&id=12346 ...
 ```
 
 # License
